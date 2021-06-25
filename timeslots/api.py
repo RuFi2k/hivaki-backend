@@ -4,7 +4,8 @@ from .strings import strings
 from .model import models
 
 class api:
-  def getAllTimeslots(cur, limit, offset):
+  def getAllTimeslots(conn, limit, offset):
+    cur = conn.cursor()
     result = []
     cur.execute(strings.getAllTimeslots(limit, offset))
     row = cur.fetchone()
@@ -12,9 +13,11 @@ class api:
       result.append(models.getActive(row))
       row = cur.fetchone()
     cur.close()
+    conn.close()
     return jsonify({ 'data': result })
 
-  def getActiveTimeslots(cur):
+  def getActiveTimeslots(conn):
+    cur = conn.cursor()
     result = []
     cur.execute(strings.getActiveTimeslots())
     row = cur.fetchone()
@@ -22,6 +25,7 @@ class api:
       result.append(models.getActive(row))
       row = cur.fetchone()
     cur.close()
+    conn.close()
     return jsonify({ 'data': result })
 
   def createTimeslot(conn, slots):
@@ -39,6 +43,7 @@ class api:
       return jsonify({ 'error': str(e) })
     finally:
       cur.close()
+      conn.close()
 
   def deleteTimeslot(conn, id):
     try:
@@ -50,3 +55,4 @@ class api:
       return jsonify({ 'success': False, 'error': str(e) })
     finally:
       cur.close()
+      conn.close()

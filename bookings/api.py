@@ -3,7 +3,8 @@ from .strings import strings
 from .model import models
 
 class api:
-  def getBookings(cur, limit, offset):
+  def getBookings(conn, limit, offset):
+    cur = conn.cursor()
     result = []
     cur.execute(strings.getBookingsString(limit, offset))
     row = cur.fetchone()
@@ -11,9 +12,11 @@ class api:
       result.append(models.getModel(row))
       row = cur.fetchone()
     cur.close()
+    conn.close()
     return jsonify({ 'data': result })
 
-  def getBooking(cur, id):
+  def getBooking(conn, id):
+    cur = conn.cursor()
     try:
       cur.execute(strings.getBooking(id))
       result = []
@@ -28,6 +31,7 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()
 
 
   def createBooking(conn, name, phone, timeslotid):
@@ -50,6 +54,7 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()
 
   def changeStatus(conn, id, status):
     cur = conn.cursor()
@@ -64,3 +69,4 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()

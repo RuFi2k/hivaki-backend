@@ -18,6 +18,7 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()
 
   def jwtauthorize(conn, token):
     cur = conn.cursor()
@@ -33,6 +34,7 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()
 
   def changePassword(conn, id, password):
     cur = conn.cursor()
@@ -44,6 +46,7 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()
 
   def changeData(conn, token, fields):
     cur = conn.cursor()
@@ -63,3 +66,4 @@ class api:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:
       cur.close()
+      conn.close()

@@ -13,7 +13,7 @@ class strings:
         )) as slots
       FROM (
         SELECT id, timestart, timeend, status
-        FROM booking.timeslots
+        FROM timeslots
         WHERE timestart > CURRENT_TIMESTAMP
       ) t
       GROUP BY 1,2,3
@@ -33,7 +33,7 @@ class strings:
         )) as slots
       FROM (
         SELECT id, timestart, timeend, status
-        FROM booking.timeslots
+        FROM timeslots
         WHERE timestart > CURRENT_TIMESTAMP
         AND status = false
       ) t
@@ -41,7 +41,7 @@ class strings:
       ORDER BY year, month, day'''
 
   def createTimeslot(slots):
-    return '''INSERT INTO booking.timeslots
+    return '''INSERT INTO timeslots
     (timestart, timeend, status)
     VALUES {}
     RETURNING id, timestart, timeend, status'''.format(
@@ -49,5 +49,5 @@ class strings:
     )
 
   def deleteTimeslot(id):
-    return '''DELETE FROM booking.timeslots
+    return '''DELETE FROM timeslots
     WHERE id = \'{}\''''.format(id)

@@ -10,37 +10,34 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/bookings', methods=['GET', 'POST'])
+@app.route('/api/bookings', methods=['GET', 'POST'])
 def getBookings():
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'GET'):
-    cur = conn.cursor()
     [limit, offset] = [request.args.get('limit'), request.args.get('offset')]
-    return bookings.api.getBookings(cur, limit, offset)
+    return bookings.api.getBookings(conn, limit, offset)
   if(request.method == 'POST'):
     payload = request.json
     return bookings.api.createBooking(conn, payload['name'], payload['phone'], payload['timeslotid'])
 
-@app.route('/bookings/<string:id>', methods=['GET'])
+@app.route('/api/bookings/<string:id>', methods=['GET'])
 def getBooking(id):
   if(request.method == 'GET'):
     conn = psycopg2.connect(utils.cfgstring)
-    cur = conn.cursor()
-    return bookings.api.getBooking(cur, id)
+    return bookings.api.getBooking(conn, id)
 
-@app.route('/timeslots', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/timeslots', methods=['GET', 'POST', 'DELETE'])
 def createTimeslot():
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'GET'):
     status = request.args.get('status')
-    cur = conn.cursor()
     if(status == 'active'):
-      return timeslots.api.getActiveTimeslots(cur)
+      return timeslots.api.getActiveTimeslots(conn)
     if(status == 'all'):
       [limit, offset] = [request.args.get('limit'), request.args.get('offset')]
       if(limit is None or offset is None):
         abort(400, '{ "error": "limit and offset required"}')
-      return timeslots.api.getAllTimeslots(cur, limit, offset)
+      return timeslots.api.getAllTimeslots(conn, limit, offset)
     abort(400, '{ "error": "status query parameter required. Should be one of ["all", "active"]"}')
   if(request.method == 'POST'):
     token = request.headers.get('authToken')
@@ -51,13 +48,13 @@ def createTimeslot():
     payload = request.get_json()
     return timeslots.api.createTimeslot(conn, payload['slots'])
 
-@app.route('/timeslots/<string:id>', methods=['DELETE'])
+@app.route('/api/timeslots/<string:id>', methods=['DELETE'])
 def deleteTimeslot(id):
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'DELETE'):
     return timeslots.api.deleteTimeslot(conn, id)
 
-@app.route('/auth', methods=['GET', 'POST'])
+@app.route('/api/auth', methods=['GET', 'POST'])
 def authenticate():
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'POST'):
@@ -66,7 +63,7 @@ def authenticate():
   if(request.method == 'GET'):
     return auth.api.jwtauthorize(conn, request.args.get('token'))
 
-@app.route('/edit', methods=['PUT'])
+@app.route('/api/edit', methods=['PUT'])
 def changePassword():
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'PUT'):
@@ -79,7 +76,7 @@ def changePassword():
     payload = request.get_json()
     return auth.api.changeData(conn, token, fields)
 
-@app.route('/bookings/update/<string:id>', methods=['PUT'])
+@app.route('/api/bookings/update/<string:id>', methods=['PUT'])
 def updateBooking(id):
   conn = psycopg2.connect(utils.cfgstring)
   if(request.method == 'PUT'):
@@ -91,6 +88,41 @@ def updateBooking(id):
     payload = request.get_json()
     return bookings.api.changeStatus(conn, id, payload['status'])
 
+@app.route('/api/hello')
+def tmp():
+  conn = psycopg2.connect(utils.cfgstring)
+  cur = conn.cursor()
+  cur.execute('''CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  
+  CREATE TABLE IF NOT EXISTS users
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    login text NOT NULL,
+    password text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS timeslots
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    timestart timestamp without time zone NOT NULL,
+    timeend timestamp without time zone NOT NULL,
+    status boolean NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bookings
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    name text NOT NULL,
+    phone text NOT NULL,
+    timeslotid uuid NOT NULL,
+    status text NOT NULL,
+    CONSTRAINT fk_timeslot FOREIGN KEY (timeslotid)
+        REFERENCES timeslots (id)
+);''')
+  conn.commit()
+  cur.close()
+  conn.close()
+  return 'OK'
 
 
 if __name__ == '__main__':
