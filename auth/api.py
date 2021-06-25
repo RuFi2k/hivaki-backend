@@ -9,11 +9,11 @@ class api:
     try:
       cur.execute(strings.authorize(login, password))
       row = cur.fetchone()
-      print('row', row)
       if(row is None):
         raise Exception('INVALID_CREDENTIALS')
       id = row[0]
-      return jsonify({ 'success': True, 'data': { 'id': id, 'token': service.jwt_encode(id) } })
+      # return '''{}'''.format(service.jwt_encode(id).replace('b\'', '').replace('\'', ''))
+      return jsonify({ 'success': True, 'data': { 'id': id, 'token': service.jwt_encode(id).decode("utf-8") } })
     except Exception as e:
       return abort(make_response(jsonify(message=str(e)), 400))
     finally:

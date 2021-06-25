@@ -118,11 +118,18 @@ CREATE TABLE IF NOT EXISTS bookings
     status text NOT NULL,
     CONSTRAINT fk_timeslot FOREIGN KEY (timeslotid)
         REFERENCES timeslots (id)
-);''')
+);
+
+INSERT INTO users (login, password)
+SELECT \'admin\', \'admin\'
+WHERE NOT EXISTS (SELECT * FROM users);
+
+SELECT * FROM USERS''')
+  row = cur.fetchone()
   conn.commit()
   cur.close()
   conn.close()
-  return 'OK'
+  return jsonify(row)
 
 
 if __name__ == '__main__':
