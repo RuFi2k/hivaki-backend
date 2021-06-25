@@ -88,6 +88,49 @@ def updateBooking(id):
     payload = request.get_json()
     return bookings.api.changeStatus(conn, id, payload['status'])
 
+@app.route('/api/hello')
+def tmp():
+  conn = psycopg2.connect(utils.cfgstring)
+  cur = conn.cursor()
+  cur.execute('''CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  
+  CREATE TABLE IF NOT EXISTS users
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    login text NOT NULL,
+    password text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS timeslots
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    timestart timestamp without time zone NOT NULL,
+    timeend timestamp without time zone NOT NULL,
+    status boolean NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bookings
+(
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    name text NOT NULL,
+    phone text NOT NULL,
+    timeslotid uuid NOT NULL,
+    status text NOT NULL,
+    CONSTRAINT fk_timeslot FOREIGN KEY (timeslotid)
+        REFERENCES timeslots (id)
+);
+
+INSERT INTO users (login, password)
+SELECT \'admin\', \'admin\'
+WHERE NOT EXISTS (SELECT * FROM users);
+
+SELECT * FROM USERS''')
+  row = cur.fetchone()
+  conn.commit()
+  cur.close()
+  conn.close()
+  return jsonify(row)
+
 
 if __name__ == '__main__':
   app.run(debug=False)
